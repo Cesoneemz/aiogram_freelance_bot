@@ -1,5 +1,5 @@
 import logging
-from config.config import API_TOKEN, REDIS_HOST, REDIS_PORT
+from config.config import API_TOKEN
 
 from aiogram import Bot, Dispatcher, executor
 from aiogram.contrib.fsm_storage.memory import MemoryStorage

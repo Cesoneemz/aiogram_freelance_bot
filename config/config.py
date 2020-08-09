@@ -1,13 +1,13 @@
-API_TOKEN = ''
+API_TOKEN = '1249477182:AAFW0AmLSeqB0CzV2r4IWFUziWIS6HpM4Nw'
 
-ADMIN_ID = ['']
+ADMIN_ID = ['434903526', '468808394']
 
 POSTGRES_CONFIG = {
-    'host': '',
-    'user': '',
-    'password': '',
+    'host': 'localhost',
+    'user': 'cesoneemz',
+    'password': 'cesoneemz19',
     'port': 5432,
-    'database': ''
+    'database': 'aiogram_bot'
 }
 
 REDIS_CONFIG = {

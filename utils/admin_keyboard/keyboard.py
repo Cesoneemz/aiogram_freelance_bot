@@ -4,5 +4,9 @@ btnSetMaxRequestPerDay = KeyboardButton("Установить макс. коли
 btnLoadCsv = KeyboardButton("Загрузить CSV-файл")
 btnEditMessage = KeyboardButton("Редактировать текстовые сообщения")
 btnUsersDatabase = KeyboardButton("Прислать csv-файл с пользователями")
+btnAddAdmin = KeyboardButton("Добавить админа")
+btnDeleteAdmin = KeyboardButton("Удалить админа")
+btnSetMaxRequestToUser = KeyboardButton("Установить количество подключений для юзера")
 kbAdminStart = ReplyKeyboardMarkup(resize_keyboard=True, row_width=3).add(btnSetMaxRequestPerDay, btnLoadCsv,
-                                                                          btnUsersDatabase, btnEditMessage)
+                                                                          btnUsersDatabase, btnEditMessage, btnAddAdmin,
+                                                                          btnDeleteAdmin, btnSetMaxRequestToUser)

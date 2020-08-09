@@ -12,6 +12,8 @@ from states.state import IdOrURl
 
 @dp.message_handler(commands=['start', 'help'])
 async def send_welcome(message: types.Message):
+    print(await db.get_user(user_id=message.from_user.id))
+
     if await db.get_user(user_id=message.from_user.id) is None:
         redis = await aioredis.create_redis_pool(**REDIS_CONFIG)
         max = await redis.get('max_request_per_day')
@@ -44,7 +46,13 @@ async def get_info(message: types.Message, state: FSMContext):
         await state.finish()
         return
 
-    msg = f'Ссылка: <a>{info[0]}</a>\n\nПараметры: {info[1]}, {info[2]}, {info[3]}'
+    link = await db.get_message(id=14)
+    param1 = await db.get_message(id=15)
+    param2 = await db.get_message(id=16)
+    param3 = await db.get_message(id=17)
+    param4 = await db.get_message(id=18)
+
+    msg = f'{link}: <a>{info[0]}</a>\n\n{param1}: {info[1]}\n\n{param2}: {info[2]}\n\n{param3}: {info[3]}\n\n{param4}: {info[4]}\n\n'
 
     await state.finish()
 

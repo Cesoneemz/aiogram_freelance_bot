@@ -16,3 +16,15 @@ class SetMaxRequestPerDay(StatesGroup):
 class EditSystemMessages(StatesGroup):
     wait_for_id = State()
     wait_fot_new_message = State()
+
+
+class AddAdmin(StatesGroup):
+    wait_for_admin_id = State()
+
+
+class DeleteAdmin(StatesGroup):
+    wait_for_admin_id_delete = State()
+
+class SetNewCountRequestToUser(StatesGroup):
+    wait_for_username = State()
+    wait_for_count = State()
