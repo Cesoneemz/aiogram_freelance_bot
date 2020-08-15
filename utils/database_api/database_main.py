@@ -152,13 +152,20 @@ class DatabaseAPI(object):
             'UPDATE info SET link = $1, param1 = $2, param2 = $3, param3 = $4, param4 = $5 WHERE id = $6',
             link, param1, param2, param3, param4, id)
 
-
     @connect
     async def set_max_requests_to_user(self, connect, username, count):
         try:
             return await connect.execute('UPDATE users SET max_request_per_day = $1 WHERE username = $2', count, username)
         except:
             return None
+
+    @connect
+    async def get_all_user_ids(self, connect):
+        return await connect.fetch('SELECT user_id FROM users')
+
+    @connect
+    async def clear_database(self, connect):
+        return await connect.execute('DELETE FROM info')
 
 
 loop = asyncio.get_event_loop()

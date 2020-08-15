@@ -4,10 +4,12 @@ import asyncio
 from aiogram import types
 from aiogram.types.chat import ChatActions
 from aiogram.dispatcher import FSMContext
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from load_all import bot, dp
 from config.config import ADMIN_ID, POSTGRES_CONFIG, REDIS_CONFIG
-from states.state import SetMaxRequestPerDay, LoadCsv, EditSystemMessages, AddAdmin, DeleteAdmin, SetNewCountRequestToUser
+from states.state import SetMaxRequestPerDay, LoadCsv, EditSystemMessages, AddAdmin, DeleteAdmin, \
+    SetNewCountRequestToUser, Mailing, ClearDatabase
 from utils.database_api.database_main import db
 from utils.admin_keyboard import keyboard as kb
 
@@ -64,8 +66,6 @@ async def download_and_insert_csv(message: types.Message, state: FSMContext):
     connect.autocommit = True
     cursor = connect.cursor()
 
-    sqlstr = "COPY public.info(link, param1, param2, param3, param4) FROM STDIN DELIMITER ',' CSV ENCODING 'UTF-8'"
-
     with open(os.path.join(os.getcwd(), 'csv', filename), 'r', encoding='utf-8-sig') as f:
         reader = csv.reader(f)
         for row in reader:
@@ -73,13 +73,18 @@ async def download_and_insert_csv(message: types.Message, state: FSMContext):
                 split_row = row[0].split(';')
             else:
                 split_row = row
-            print(row)
             if await db.get_info_by_id(id=int(split_row[0])) is None:
-                await db.insert_new_info(id=int(split_row[0]), link=split_row[1], param1=split_row[2],
-                                         param2=split_row[3], param3=split_row[4], param4=split_row[5])
+                try:
+                    await db.insert_new_info(id=int(split_row[0]), link=split_row[1], param1=split_row[2],
+                                             param2=split_row[3], param3=split_row[4], param4=split_row[5])
+                except Exception as e:
+                    await message.answer(str(e))
             else:
-                await db.update_info(id=int(split_row[0]), link=split_row[1], param1=split_row[2],
-                                     param2=split_row[3], param3=split_row[4], param4=split_row[5])
+                try:
+                    await db.update_info(id=int(split_row[0]), link=split_row[1], param1=split_row[2],
+                                         param2=split_row[3], param3=split_row[4], param4=split_row[5])
+                except Exception as e:
+                    await message.answer(str(e))
 
     connect.commit()
 
@@ -191,7 +196,8 @@ async def set_max_requests_to_user_part1(message: types.Message):
     await SetNewCountRequestToUser.wait_for_username.set()
 
 
-@dp.message_handler(lambda message: str(message.from_user.id) in ADMIN_ID, state=SetNewCountRequestToUser.wait_for_username)
+@dp.message_handler(lambda message: str(message.from_user.id) in ADMIN_ID,
+                    state=SetNewCountRequestToUser.wait_for_username)
 async def set_max_requests_to_user_part2(message: types.Message, state: FSMContext):
     if not await db.get_user_by_username(username=message.text) is None:
         await state.update_data(username=message.text)
@@ -205,7 +211,8 @@ async def set_max_requests_to_user_part2(message: types.Message, state: FSMConte
         await state.finish()
 
 
-@dp.message_handler(lambda message: str(message.from_user.id) in ADMIN_ID, state=SetNewCountRequestToUser.wait_for_count)
+@dp.message_handler(lambda message: str(message.from_user.id) in ADMIN_ID,
+                    state=SetNewCountRequestToUser.wait_for_count)
 async def set_max_requests_to_user_part3(message: types.Message, state: FSMContext):
     data = await state.get_data()
     username = data.get('username')
@@ -216,4 +223,54 @@ async def set_max_requests_to_user_part3(message: types.Message, state: FSMConte
         await state.finish()
     except:
         await message.answer("Неверное значение для количества подключений")
+        await state.finish()
+
+
+@dp.message_handler(lambda message: str(message.from_user.id) in ADMIN_ID and message.text == "Сделать рассылку")
+async def mailing(message: types.Message):
+    await message.answer("Пришлите текст рассылки")
+
+    await Mailing.wait_for_text.set()
+
+
+@dp.message_handler(lambda message: str(message.from_user.id) in ADMIN_ID, state=Mailing.wait_for_text)
+async def send_mailing(message: types.Message, state: FSMContext):
+    users_ids = await db.get_all_user_ids()
+    for id in users_ids:
+        try:
+            await bot.send_message(chat_id=id['user_id'], text=message.text)
+
+            await asyncio.sleep(0.3)
+        except Exception:
+            pass
+
+    await state.finish()
+
+
+@dp.message_handler(lambda message: str(message.from_user.id) in ADMIN_ID and message.text == "Очистить базу данных")
+async def clear_info_database_yesno(message: types.Message):
+    markup = InlineKeyboardMarkup(
+        inline_keyboard=
+        [
+            [InlineKeyboardButton(text="Да", callback_data="yes")],
+            [InlineKeyboardButton(text="Нет", callback_data="no")],
+        ]
+    )
+    await message.answer("Вы точно хотите очистить базу с информацией?", reply_markup=markup)
+
+    await ClearDatabase.yesno_prompt.set()
+
+
+@dp.callback_query_handler(lambda call: str(call.from_user.id) in ADMIN_ID, state=ClearDatabase.yesno_prompt)
+async def clear_info_database(call: types.CallbackQuery, state: FSMContext):
+    if call.data == "no":
+        await state.finish()
+
+        await bot.send_message(chat_id=call.from_user.id, text="Отменено.")
+
+    else:
+
+        await db.clear_database()
+        await bot.send_message(chat_id=call.from_user.id, text="База данных была полностью очищена.")
+
         await state.finish()

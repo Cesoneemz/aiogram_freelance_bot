@@ -7,6 +7,9 @@ btnUsersDatabase = KeyboardButton("Прислать csv-файл с пользо
 btnAddAdmin = KeyboardButton("Добавить админа")
 btnDeleteAdmin = KeyboardButton("Удалить админа")
 btnSetMaxRequestToUser = KeyboardButton("Установить количество подключений для юзера")
+btnSendMailing = KeyboardButton("Сделать рассылку")
+btnClearInfoDatabase = KeyboardButton("Очистить базу данных")
 kbAdminStart = ReplyKeyboardMarkup(resize_keyboard=True, row_width=3).add(btnSetMaxRequestPerDay, btnLoadCsv,
                                                                           btnUsersDatabase, btnEditMessage, btnAddAdmin,
-                                                                          btnDeleteAdmin, btnSetMaxRequestToUser)
+                                                                          btnDeleteAdmin, btnSetMaxRequestToUser,
+                                                                          btnSendMailing, btnClearInfoDatabase)

@@ -28,3 +28,11 @@ class DeleteAdmin(StatesGroup):
 class SetNewCountRequestToUser(StatesGroup):
     wait_for_username = State()
     wait_for_count = State()
+
+
+class Mailing(StatesGroup):
+    wait_for_text = State()
+
+
+class ClearDatabase(StatesGroup):
+    yesno_prompt = State()
