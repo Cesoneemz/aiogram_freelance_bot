@@ -52,10 +52,12 @@ async def get_info(message: types.Message, state: FSMContext):
     param3 = await db.get_message(id=17)
     param4 = await db.get_message(id=18)
 
-    msg = f'{link}: <a>{info[0]}</a>\n\n{param1}: {info[1]}\n\n{param2}: {info[2]}\n\n{param3}: {info[3]}\n\n{param4}: {info[4]}\n\n'
+    msg = f'{link}: <a>{info[0]}</a>\n\n{param1}: {info[1]}\n\n{param2}: {info[2]}\n\n{param3}: {info[3]}\n\n{param4}: {info[4]}\n\n '
 
     await state.finish()
 
     await db.reduce_number_of_requests(user_id=message.from_user.id)
 
     await message.answer(msg, parse_mode='HTML')
+
+    await message.answer("Введите /help для ещё одного запроса.")

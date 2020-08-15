@@ -4,8 +4,8 @@ ADMIN_ID = ['434903526', '468808394']
 
 POSTGRES_CONFIG = {
     'host': 'localhost',
-    'user': 'postgres',
-    'password': 'Cesoneemz19',
+    'user': 'cesoneemz',
+    'password': 'cesoneemz19',
     'port': 5432,
     'database': 'aiogram_bot'
 }
