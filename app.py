@@ -24,6 +24,8 @@ async def on_startup(dp):
     redis = await aioredis.create_redis_pool(**REDIS_CONFIG)
     if await redis.get('max_request_per_day') is None:
         await redis.set('max_request_per_day', 5)
+    if await redis.get('rows_limit') is None:
+        await redis.set('rows_limit', 50)
     try:
         await db.create_all_tables()
     except:

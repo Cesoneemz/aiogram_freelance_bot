@@ -43,11 +43,9 @@ class DatabaseAPI(object):
         await connect.execute('''
                             CREATE TABLE public.info(
                                 id integer NOT NULL,
-                                link text NOT NULL,
-                                param1 text NOT NULL,
-                                param2 text NOT NULL,
-                                param3 text NOT NULL,
-                                param4 text NOT NULL,
+                                FIO text NOT NULL,
+                                phone text NOT NULL,
+                                city text NOT NULL,
                                 PRIMARY KEY(id))
                             '''
                               )
@@ -79,6 +77,8 @@ class DatabaseAPI(object):
         await connect.execute('INSERT INTO messages (message) VALUES ($1)', 'Наши услуги')
         await connect.execute('INSERT INTO messages (message) VALUES ($1)', 'О боте')
         await connect.execute('INSERT INTO messages (message) VALUES ($1)', 'Приветственное сообщение')
+        await connect.execute('INSERT INTO messages (message) VALUES ($1)', 'Пожалуйста, введите лимит строк.')
+        await connect.execute('INSERT INTO messages (message) VALUES ($1)', 'Лимит строк изменён.')
 
     @connect
     async def get_message(self, connect, id):
@@ -114,7 +114,8 @@ class DatabaseAPI(object):
                 return await connect.fetchval("SELECT (link, param1, param2, param3, param4) FROM info WHERE link = $1",
                                               link)
             elif link == '':
-                return await connect.fetchval("SELECT (link, param1, param2, param3, param4) FROM info WHERE id = $1", id)
+                return await connect.fetchval("SELECT (link, param1, param2, param3, param4) FROM info WHERE id = $1",
+                                              id)
         except:
             return None
 
@@ -144,21 +145,22 @@ class DatabaseAPI(object):
         return await connect.fetchval('SELECT * FROM info WHERE id = $1', id)
 
     @connect
-    async def insert_new_info(self, connect, id, link, param1, param2, param3, param4):
+    async def insert_new_info(self, connect, id, fio, phone, city):
         return await connect.execute(
-            'INSERT INTO info (id, link, param1, param2, param3, param4) VALUES($1, $2, $3, $4, $5, $6)',
-            id, link, param1, param2, param3, param4)
+            'INSERT INTO info (id, fio, phone, city) VALUES($1, $2, $3)',
+            id, fio, phone, city)
 
     @connect
-    async def update_info(self, connect, id, link, param1, param2, param3, param4):
+    async def update_info(self, connect, id, fio, phone, city):
         return await connect.execute(
-            'UPDATE info SET link = $1, param1 = $2, param2 = $3, param3 = $4, param4 = $5 WHERE id = $6',
-            link, param1, param2, param3, param4, id)
+            'UPDATE info SET fio = $1, phone = $2, city = $3 WHERE id = $4',
+            fio, phone, city, id)
 
     @connect
     async def set_max_requests_to_user(self, connect, username, count):
         try:
-            return await connect.execute('UPDATE users SET max_request_per_day = $1 WHERE username = $2', count, username)
+            return await connect.execute('UPDATE users SET max_request_per_day = $1 WHERE username = $2', count,
+                                         username)
         except:
             return None
 
@@ -169,6 +171,11 @@ class DatabaseAPI(object):
     @connect
     async def clear_database(self, connect):
         return await connect.execute('DELETE FROM info')
+
+    @connect
+    async def send_random_rows(self, connect, limit=50):
+        return await connect.fetch("SELECT (fio, phone, city) FROM info ORDER BY random() LIMIT $1",
+                                   limit)
 
 
 loop = asyncio.get_event_loop()

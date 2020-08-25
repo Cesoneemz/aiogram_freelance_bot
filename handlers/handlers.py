@@ -3,7 +3,7 @@ import aioredis
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 
-from load_all import dp
+from load_all import dp, bot
 from config.config import REDIS_CONFIG
 from utils.database_api.database_main import db
 from utils.user_keyboard import kbUserMain
@@ -18,37 +18,12 @@ async def send_welcome(message: types.Message):
 
 @dp.message_handler(lambda msg: msg.text == 'Отправить запрос')
 async def send_request(message: types.Message):
-    if await db.get_user(user_id=message.from_user.id) is None:
-        redis = await aioredis.create_redis_pool(**REDIS_CONFIG)
-        max = await redis.get('max_request_per_day')
-        await db.add_user(user_id=message.from_user.id, username=message.from_user.username,
-                          max_requests=int(max))
-        redis.close()
-        await redis.wait_closed()
+    import os
+    from openpyxl import Workbook
 
-    if int(await db.get_user_max_request(user_id=message.from_user.id)) <= 0:
-        await message.answer(await db.get_message(id=6), parse_mode='HTML', reply_markup=kbUserMain)
-        await db.reduce_number_of_requests(user_id=message.from_user.id)
-        return
-
-    welcome_message = await db.get_message(id=1)
-
-    await message.answer(welcome_message, parse_mode='HTML', reply_markup=kbUserMain)
-
-    await IdOrURl.wait_for_id_or_url.set()
-
-
-@dp.message_handler(state=IdOrURl.wait_for_id_or_url)
-async def get_info(message: types.Message, state: FSMContext):
-    if message.text.startswith(('http', 'https')):
-        info = await db.get_info_from_db(link=message.text)
-    else:
-        info = await db.get_info_from_db(id=int(message.text))
-
-    if info is None:
-        await message.answer(await db.get_message(id=5), parse_mode='HTML')
-        await state.finish()
-        return
+    wb = Workbook()
+    sheet = wb.active
+    sheet.title = 'info'
 
     link = await db.get_message(id=14)
     param1 = await db.get_message(id=15)
@@ -56,13 +31,35 @@ async def get_info(message: types.Message, state: FSMContext):
     param3 = await db.get_message(id=17)
     param4 = await db.get_message(id=18)
 
-    msg = f'{link}: <a>{info[0]}</a>\n\n{param1}: {info[1]}\n\n{param2}: {info[2]}\n\n{param3}: {info[3]}\n\n{param4}: {info[4]}\n\n '
+    row = 1
+    sheet['A' + str(row)] = link
+    sheet['B' + str(row)] = param1
+    sheet['C' + str(row)] = param2
+    sheet['D' + str(row)] = param3
+    sheet['E' + str(row)] = param4
 
-    await state.finish()
+    redis = await aioredis.create_redis_pool(**REDIS_CONFIG)
+    limit = await redis.get('rows_limit')
 
-    await db.reduce_number_of_requests(user_id=message.from_user.id)
+    info = await db.send_random_rows(limit=limit)
 
-    await message.answer(msg, parse_mode='HTML', reply_markup=kbUserMain)
+    redis.close()
+    await redis.wait_closed()
+
+    for item in info:
+        row += 1
+        sheet['A' + str(row)] = item[0][0]
+        sheet['B' + str(row)] = item[0][1]
+        sheet['C' + str(row)] = item[0][2]
+        sheet['D' + str(row)] = item[0][3]
+        sheet['E' + str(row)] = item[0][4]
+
+    filename = f'data-{message.from_user.id}.xlsx'
+    wb.save(filename=filename)
+
+    with open(filename, 'rb') as f:
+        await bot.send_document(chat_id=message.from_user.id, document=f)
+        os.remove(filename)
 
 
 @dp.message_handler(lambda msg: msg.text == 'Наши услуги')

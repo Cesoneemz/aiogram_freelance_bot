@@ -274,3 +274,21 @@ async def clear_info_database(call: types.CallbackQuery, state: FSMContext):
         await bot.send_message(chat_id=call.from_user.id, text="База данных была полностью очищена.")
 
         await state.finish()
+
+
+@dp.message_handler(lambda message: str(message.from_user.id) in ADMIN_ID and message.text == 'Установить лимит строк')
+async def set_limit_rows(message: types.Message):
+    await message.answer(await db.get_message(id=23))
+
+    await SetMaxRequestPerDay.wait_for_request_int.set()
+
+
+@dp.message_handler(lambda message: str(message.from_user.id) in ADMIN_ID,
+                    state=SetMaxRequestPerDay.wait_for_request_int)
+async def set_limit_rows_part_w(message: types.Message, state: FSMContext):
+    redis = await aioredis.create_redis_pool(**REDIS_CONFIG)
+    await redis.set('rows_limit', int(message.text))
+    redis.close()
+    await redis.wait_closed()
+    await message.answer(await db.get_message(id=24))
+    await state.finish()

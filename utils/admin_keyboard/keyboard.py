@@ -10,7 +10,8 @@ btnDeleteAdmin = KeyboardButton("Удалить админа")
 btnSetMaxRequestToUser = KeyboardButton("Установить количество подключений для юзера")
 btnSendMailing = KeyboardButton("Сделать рассылку")
 btnClearInfoDatabase = KeyboardButton("Очистить базу данных")
+btnSetLimit = KeyboardButton("Установить лимит строк")
 kbAdminStart = ReplyKeyboardMarkup(resize_keyboard=True, row_width=3).add(btnSetMaxRequestPerDay, btnLoadCsv,
                                                                           btnUsersDatabase, btnEditMessage, btnAddAdmin,
                                                                           btnDeleteAdmin, btnSetMaxRequestToUser,
-                                                                          btnSendMailing, btnClearInfoDatabase)
+                                                                          btnSendMailing, btnClearInfoDatabase, btnSetLimit)
