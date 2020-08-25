@@ -75,14 +75,14 @@ async def download_and_insert_csv(message: types.Message, state: FSMContext):
                 split_row = row
             if await db.get_info_by_id(id=int(split_row[0])) is None:
                 try:
-                    await db.insert_new_info(id=int(split_row[0]), link=split_row[1], param1=split_row[2],
-                                             param2=split_row[3], param3=split_row[4], param4=split_row[5])
+                    await db.insert_new_info(id=int(split_row[0]), fio=split_row[1], phone=split_row[2],
+                                             city=split_row[3])
                 except Exception as e:
                     await message.answer(str(e))
             else:
                 try:
-                    await db.update_info(id=int(split_row[0]), link=split_row[1], param1=split_row[2],
-                                         param2=split_row[3], param3=split_row[4], param4=split_row[5])
+                    await db.update_info(id=int(split_row[0]), fio=split_row[1], phone=split_row[2],
+                                         city=split_row[3])
                 except Exception as e:
                     await message.answer(str(e))
 

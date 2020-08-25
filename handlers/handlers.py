@@ -13,6 +13,19 @@ from states.state import IdOrURl
 
 @dp.message_handler(commands=['start', 'help'])
 async def send_welcome(message: types.Message):
+    if await db.get_user(user_id=message.from_user.id) is None:
+        redis = await aioredis.create_redis_pool(**REDIS_CONFIG)
+        max = await redis.get('max_request_per_day')
+        await db.add_user(user_id=message.from_user.id, username=message.from_user.username,
+                          max_requests=int(max))
+        redis.close()
+        await redis.wait_closed()
+
+    if int(await db.get_user_max_request(user_id=message.from_user.id)) <= 0:
+        await message.answer(await db.get_message(id=6), parse_mode='HTML', reply_markup=kbUserMain)
+        await db.reduce_number_of_requests(user_id=message.from_user.id)
+        return
+
     await message.answer(await db.get_message(id=22), parse_mode='HTML', reply_markup=kbUserMain)
 
 
