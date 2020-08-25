@@ -6,14 +6,18 @@ from aiogram.dispatcher import FSMContext
 from load_all import dp
 from config.config import REDIS_CONFIG
 from utils.database_api.database_main import db
+from utils.user_keyboard import kbUserMain
 
 from states.state import IdOrURl
 
 
 @dp.message_handler(commands=['start', 'help'])
 async def send_welcome(message: types.Message):
-    print(await db.get_user(user_id=message.from_user.id))
+    await message.answer(await db.get_message(id=22), parse_mode='HTML', reply_markup=kbUserMain)
 
+
+@dp.message_handler(lambda msg: msg.text == 'Отправить запрос')
+async def send_request(message: types.Message):
     if await db.get_user(user_id=message.from_user.id) is None:
         redis = await aioredis.create_redis_pool(**REDIS_CONFIG)
         max = await redis.get('max_request_per_day')
@@ -23,13 +27,13 @@ async def send_welcome(message: types.Message):
         await redis.wait_closed()
 
     if int(await db.get_user_max_request(user_id=message.from_user.id)) <= 0:
-        await message.answer(await db.get_message(id=6))
+        await message.answer(await db.get_message(id=6), parse_mode='HTML', reply_markup=kbUserMain)
         await db.reduce_number_of_requests(user_id=message.from_user.id)
         return
 
     welcome_message = await db.get_message(id=1)
 
-    await message.answer(welcome_message)
+    await message.answer(welcome_message, parse_mode='HTML', reply_markup=kbUserMain)
 
     await IdOrURl.wait_for_id_or_url.set()
 
@@ -42,7 +46,7 @@ async def get_info(message: types.Message, state: FSMContext):
         info = await db.get_info_from_db(id=int(message.text))
 
     if info is None:
-        await message.answer(await db.get_message(id=5))
+        await message.answer(await db.get_message(id=5), parse_mode='HTML')
         await state.finish()
         return
 
@@ -58,6 +62,14 @@ async def get_info(message: types.Message, state: FSMContext):
 
     await db.reduce_number_of_requests(user_id=message.from_user.id)
 
-    await message.answer(msg, parse_mode='HTML')
+    await message.answer(msg, parse_mode='HTML', reply_markup=kbUserMain)
 
-    await message.answer("Введите /help для ещё одного запроса.")
+
+@dp.message_handler(lambda msg: msg.text == 'Наши услуги')
+async def send_our_services(message: types.Message):
+    await message.answer(await db.get_message(id=20))
+
+
+@dp.message_handler(lambda msg: msg.text == 'О боте')
+async def send_our_services(message: types.Message):
+    await message.answer(await db.get_message(id=21))

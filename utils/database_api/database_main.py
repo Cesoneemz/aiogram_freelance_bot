@@ -76,6 +76,9 @@ class DatabaseAPI(object):
         await connect.execute('INSERT INTO messages (message) VALUES ($1)', 'Параметр 2')
         await connect.execute('INSERT INTO messages (message) VALUES ($1)', 'Параметр 3')
         await connect.execute('INSERT INTO messages (message) VALUES ($1)', 'Параметр 4')
+        await connect.execute('INSERT INTO messages (message) VALUES ($1)', 'Наши услуги')
+        await connect.execute('INSERT INTO messages (message) VALUES ($1)', 'О боте')
+        await connect.execute('INSERT INTO messages (message) VALUES ($1)', 'Приветственное сообщение')
 
     @connect
     async def get_message(self, connect, id):
