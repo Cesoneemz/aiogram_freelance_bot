@@ -147,7 +147,7 @@ class DatabaseAPI(object):
     @connect
     async def insert_new_info(self, connect, id, fio, phone, city):
         return await connect.execute(
-            'INSERT INTO info (id, fio, phone, city) VALUES($1, $2, $3)',
+            'INSERT INTO info (id, fio, phone, city) VALUES($1, $2, $3, $4)',
             id, fio, phone, city)
 
     @connect
