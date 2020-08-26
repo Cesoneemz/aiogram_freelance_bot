@@ -21,16 +21,18 @@ async def send_welcome(message: types.Message):
         redis.close()
         await redis.wait_closed()
 
-    if int(await db.get_user_max_request(user_id=message.from_user.id)) <= 0:
-        await message.answer(await db.get_message(id=6), parse_mode='HTML', reply_markup=kbUserMain)
-        await db.reduce_number_of_requests(user_id=message.from_user.id)
-        return
-
     await message.answer(await db.get_message(id=22), parse_mode='HTML', reply_markup=kbUserMain)
 
 
 @dp.message_handler(lambda msg: msg.text == 'Отправить запрос')
 async def send_request(message: types.Message):
+
+    if int(await db.get_user_max_request(user_id=message.from_user.id)) <= 0:
+        await message.answer(await db.get_message(id=6), parse_mode='HTML', reply_markup=kbUserMain)
+        await db.reduce_number_of_requests(user_id=message.from_user.id)
+        return
+
+
     import os
     from openpyxl import Workbook
 
