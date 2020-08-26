@@ -38,23 +38,19 @@ async def send_request(message: types.Message):
     sheet = wb.active
     sheet.title = 'info'
 
-    link = await db.get_message(id=14)
-    param1 = await db.get_message(id=15)
-    param2 = await db.get_message(id=16)
-    param3 = await db.get_message(id=17)
-    param4 = await db.get_message(id=18)
+    fio = await db.get_message(id=16)
+    phone = await db.get_message(id=17)
+    city = await db.get_message(id=18)
 
     row = 1
-    sheet['A' + str(row)] = link
-    sheet['B' + str(row)] = param1
-    sheet['C' + str(row)] = param2
-    sheet['D' + str(row)] = param3
-    sheet['E' + str(row)] = param4
+    sheet['A' + str(row)] = fio
+    sheet['B' + str(row)] = phone
+    sheet['C' + str(row)] = city
 
     redis = await aioredis.create_redis_pool(**REDIS_CONFIG)
     limit = await redis.get('rows_limit')
 
-    info = await db.send_random_rows(limit=limit)
+    info = await db.send_random_rows(limit=int(limit))
 
     redis.close()
     await redis.wait_closed()
@@ -64,8 +60,6 @@ async def send_request(message: types.Message):
         sheet['A' + str(row)] = item[0][0]
         sheet['B' + str(row)] = item[0][1]
         sheet['C' + str(row)] = item[0][2]
-        sheet['D' + str(row)] = item[0][3]
-        sheet['E' + str(row)] = item[0][4]
 
     filename = f'data-{message.from_user.id}.xlsx'
     wb.save(filename=filename)

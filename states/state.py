@@ -36,3 +36,7 @@ class Mailing(StatesGroup):
 
 class ClearDatabase(StatesGroup):
     yesno_prompt = State()
+
+
+class SetNewRowsCount(StatesGroup):
+    wait_for_count = State()

@@ -9,7 +9,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from load_all import bot, dp
 from config.config import ADMIN_ID, POSTGRES_CONFIG, REDIS_CONFIG
 from states.state import SetMaxRequestPerDay, LoadCsv, EditSystemMessages, AddAdmin, DeleteAdmin, \
-    SetNewCountRequestToUser, Mailing, ClearDatabase
+    SetNewCountRequestToUser, Mailing, ClearDatabase, SetNewRowsCount
 from utils.database_api.database_main import db
 from utils.admin_keyboard import keyboard as kb
 
@@ -280,11 +280,11 @@ async def clear_info_database(call: types.CallbackQuery, state: FSMContext):
 async def set_limit_rows(message: types.Message):
     await message.answer(await db.get_message(id=23))
 
-    await SetMaxRequestPerDay.wait_for_request_int.set()
+    await SetNewRowsCount.wait_for_count.set()
 
 
 @dp.message_handler(lambda message: str(message.from_user.id) in ADMIN_ID,
-                    state=SetMaxRequestPerDay.wait_for_request_int)
+                    state=SetNewRowsCount.wait_for_count)
 async def set_limit_rows_part_w(message: types.Message, state: FSMContext):
     redis = await aioredis.create_redis_pool(**REDIS_CONFIG)
     await redis.set('rows_limit', int(message.text))
