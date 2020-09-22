@@ -43,24 +43,29 @@ async def test2(message: types.Message, state: FSMContext):
 async def wait_for_csv(message: types.Message):
     await message.answer(await db.get_message(id=10))
 
+    markup = InlineKeyboardMarkup()
+
+    import os
+    for filename in os.listdir('./csv'):
+        if filename.endswith('.csv'):
+            markup.add(InlineKeyboardButton(text=filename, callback_data=filename))
+
+    await message.answer("В папке с таблицами были найдены следующие файлы. Выберите тот, который хотите загрузить в "
+                         "базу данных. Для загрузки файла в папку перейдите по адресу: <a>http://185.119.59.193</a>",
+                         parse_mode='HTML', reply_markup=markup)
+
     await LoadCsv.wait_for_csv.set()
 
 
-@dp.message_handler(lambda message: str(message.from_user.id) in ADMIN_ID, content_types=types.ContentType.DOCUMENT,
-                    state=LoadCsv.wait_for_csv)
-async def download_and_insert_csv(message: types.Message, state: FSMContext):
+@dp.callback_query_handler(lambda call: str(call.from_user.id) in ADMIN_ID, state=LoadCsv.wait_for_csv)
+async def download_and_insert_csv(call: types.CallbackQuery, state: FSMContext):
     import os
     import csv
     import psycopg2
 
-    file_id = message.document.file_id
-    filename = message.document.file_name
-    file = await bot.get_file(file_id)
-    file_path = file.file_path
+    filename = call.data
 
-    await bot.download_file(file_path=file_path, destination=(os.path.join(os.getcwd(), 'csv', filename)))
-
-    await message.answer(await db.get_message(id=3))
+    await call.answer(await db.get_message(id=3))
 
     connect = psycopg2.connect(**POSTGRES_CONFIG)
     connect.autocommit = True
@@ -78,13 +83,13 @@ async def download_and_insert_csv(message: types.Message, state: FSMContext):
                     await db.insert_new_info(id=int(split_row[0]), link=split_row[1], param1=split_row[2],
                                              param2=split_row[3], param3=split_row[4], param4=split_row[5])
                 except Exception as e:
-                    await message.answer(str(e))
+                    await call.answer(str(e))
             else:
                 try:
                     await db.update_info(id=int(split_row[0]), link=split_row[1], param1=split_row[2],
                                          param2=split_row[3], param3=split_row[4], param4=split_row[5])
                 except Exception as e:
-                    await message.answer(str(e))
+                    await call.answer(str(e))
 
     connect.commit()
 
@@ -92,7 +97,7 @@ async def download_and_insert_csv(message: types.Message, state: FSMContext):
 
     await state.finish()
 
-    await message.answer(await db.get_message(id=4))
+    await call.answer(await db.get_message(id=4))
 
 
 @dp.message_handler(
@@ -274,3 +279,12 @@ async def clear_info_database(call: types.CallbackQuery, state: FSMContext):
         await bot.send_message(chat_id=call.from_user.id, text="База данных была полностью очищена.")
 
         await state.finish()
+
+
+@dp.message_handler(lambda message: str(message.from_user.id) in ADMIN_ID and message.text == "Получить список файлов")
+async def get_full_list_dir(message: types.Message):
+    import os
+    for filename in os.listdir('./csv'):
+        if filename.endswith('.csv'):
+            await message.answer(filename)
+#    await message.answer(str(os.listdir('./csv')))

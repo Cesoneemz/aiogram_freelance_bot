@@ -1,15 +1,17 @@
-API_TOKEN = '1249477182:AAFW0AmLSeqB0CzV2r4IWFUziWIS6HpM4Nw'
+import os
 
-ADMIN_ID = ['434903526', '468808394']
+API_TOKEN = os.getenv('API_KEY_ONE')
+
+ADMIN_ID = os.getenv('ADMIN_IDS').split(' ')
 
 POSTGRES_CONFIG = {
-    'host': 'localhost',
-    'user': 'cesoneemz',
-    'password': 'cesoneemz19',
-    'port': 5432,
-    'database': 'aiogram_bot'
+    'host': os.getenv('POSTGRES_HOST'),
+    'user': os.getenv('POSTGRES_USER'),
+    'password': os.getenv('POSTGRES_PASSWORD'),
+    'port': os.getenv('POSTGRES_PORT'),
+    'database': os.getenv('POSTGRES_DATABASE_ONE')
 }
 
 REDIS_CONFIG = {
-    'address': 'redis://localhost',
+    'address': os.getenv('REDIS_ADDRESS'),
 }
