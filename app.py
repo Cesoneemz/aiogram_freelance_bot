@@ -17,6 +17,16 @@ async def zero_out_requests():
         redis.close()
         await redis.wait_closed()
 
+        users_ids = await db.get_all_user_ids()
+        for id in users_ids:
+            try:
+                await bot.send_message(chat_id=id['user_id'], text="Количество запросов было обновлено! Вы снова "
+                                                                   "можете пользоваться ботом.")
+
+                await asyncio.sleep(0.3)
+            except Exception:
+                pass
+
 
 async def on_startup(dp):
     for id in ADMIN_ID:
