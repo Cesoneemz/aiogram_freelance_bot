@@ -43,61 +43,75 @@ async def test2(message: types.Message, state: FSMContext):
 async def wait_for_csv(message: types.Message):
     await message.answer(await db.get_message(id=10))
 
-    markup = InlineKeyboardMarkup()
+    markup = InlineKeyboardMarkup(row_width=3)
 
     import os
-    for filename in os.listdir('./csv'):
-        if filename.endswith('.csv'):
-            markup.add(InlineKeyboardButton(text=filename, callback_data=filename))
+    if os.listdir('./csv'):
+        for filename in os.listdir('./csv'):
+            if filename.endswith('.csv'):
+                markup.add(InlineKeyboardButton(text=filename, callback_data=filename))
 
-    await message.answer("В папке с таблицами были найдены следующие файлы. Выберите тот, который хотите загрузить в "
-                         "базу данных. Для загрузки файла в папку перейдите по адресу: <a>http://185.119.59.193</a>",
-                         parse_mode='HTML', reply_markup=markup)
+        markup.insert(InlineKeyboardButton(text="Назад", callback_data="back"))
 
-    await LoadCsv.wait_for_csv.set()
+        await message.answer("В папке с таблицами были найдены следующие файлы. Выберите тот, который хотите "
+                             "загрузить в "
+                             "базу данных. Для загрузки файла в папку перейдите по адресу: <a>http://185.119.59.193</a>",
+                             parse_mode='HTML', reply_markup=markup)
+
+        await LoadCsv.wait_for_csv.set()
+
+    else:
+        await message.answer("В папке с таблицами не было найдено csv-файлов. Пожалуйста, загрузите их, по адресу: "
+                             "<a>http://185.119.59.193</a>", parse_mode='HTML')
 
 
 @dp.callback_query_handler(lambda call: str(call.from_user.id) in ADMIN_ID, state=LoadCsv.wait_for_csv)
 async def download_and_insert_csv(call: types.CallbackQuery, state: FSMContext):
-    import os
-    import csv
-    import psycopg2
+    if call.data != "back":
 
-    filename = call.data
+        import os
+        import csv
+        import psycopg2
 
-    await call.answer(await db.get_message(id=3))
+        filename = call.data
 
-    connect = psycopg2.connect(**POSTGRES_CONFIG)
-    connect.autocommit = True
-    cursor = connect.cursor()
+        await call.answer(await db.get_message(id=3))
 
-    with open(os.path.join(os.getcwd(), 'csv', filename), 'r', encoding='utf-8-sig') as f:
-        reader = csv.reader(f)
-        for row in reader:
-            if len(row) == 1:
-                split_row = row[0].split(';')
-            else:
-                split_row = row
-            if await db.get_info_by_id(id=int(split_row[0])) is None:
-                try:
-                    await db.insert_new_info(id=int(split_row[0]), link=split_row[1], param1=split_row[2],
+        connect = psycopg2.connect(**POSTGRES_CONFIG)
+        connect.autocommit = True
+        cursor = connect.cursor()
+
+        with open(os.path.join(os.getcwd(), 'csv', filename), 'r', encoding='utf-8-sig') as f:
+            reader = csv.reader(f)
+            for row in reader:
+                if len(row) == 1:
+                    split_row = row[0].split(';')
+                else:
+                    split_row = row
+                if await db.get_info_by_id(id=int(split_row[0])) is None:
+                    try:
+                        await db.insert_new_info(id=int(split_row[0]), link=split_row[1], param1=split_row[2],
+                                                 param2=split_row[3], param3=split_row[4], param4=split_row[5])
+                    except Exception as e:
+                        await call.answer(str(e))
+                else:
+                    try:
+                        await db.update_info(id=int(split_row[0]), link=split_row[1], param1=split_row[2],
                                              param2=split_row[3], param3=split_row[4], param4=split_row[5])
-                except Exception as e:
-                    await call.answer(str(e))
-            else:
-                try:
-                    await db.update_info(id=int(split_row[0]), link=split_row[1], param1=split_row[2],
-                                         param2=split_row[3], param3=split_row[4], param4=split_row[5])
-                except Exception as e:
-                    await call.answer(str(e))
+                    except Exception as e:
+                        await call.answer(str(e))
 
-    connect.commit()
+        connect.commit()
 
-    os.remove(os.path.join(os.getcwd(), 'csv', filename))
+        os.remove(os.path.join(os.getcwd(), 'csv', filename))
 
-    await state.finish()
+        await state.finish()
 
-    await call.answer(await db.get_message(id=4))
+        await call.answer(await db.get_message(id=4))
+
+    else:
+
+        await state.finish()
 
 
 @dp.message_handler(

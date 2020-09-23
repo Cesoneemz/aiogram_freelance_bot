@@ -37,5 +37,7 @@ async def on_shutdown(dp):
 if __name__ == '__main__':
     from handlers.handlers import dp
 
-    dp.loop.create_task(zero_out_requests())
-    executor.start_polling(dp, on_startup=on_startup, on_shutdown=on_shutdown)
+    loop = asyncio.get_event_loop()
+    loop.create_task(zero_out_requests())
+
+    executor.start_polling(dp, on_startup=on_startup, on_shutdown=on_shutdown, loop=loop)
