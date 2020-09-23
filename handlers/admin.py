@@ -46,7 +46,7 @@ async def wait_for_csv(message: types.Message):
     markup = InlineKeyboardMarkup(row_width=3)
 
     import os
-    if os.listdir('./csv'):
+    if len(os.listdir('./csv')) > 0:
         for filename in os.listdir('./csv'):
             if filename.endswith('.csv'):
                 markup.add(InlineKeyboardButton(text=filename, callback_data=filename))
