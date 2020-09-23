@@ -46,6 +46,7 @@ async def wait_for_csv(message: types.Message):
     markup = InlineKeyboardMarkup(row_width=3)
 
     import os
+    print(os.listdir('./csv'))
     if len(os.listdir('./csv')) > 0:
         for filename in os.listdir('./csv'):
             if filename.endswith('.csv'):
